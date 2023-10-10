@@ -1,0 +1,217 @@
+VALAC(1)                                                       User Commands                                                      VALAC(1)
+
+NNAAMMEE
+       valac - compiler that translates Vala source code into C source and header files
+
+SSYYNNOOPPSSIISS
+       vvaallaacc [_O_P_T_I_O_N]... [_F_I_L_E]...
+
+DDEESSCCRRIIPPTTIIOONN
+       Vala   is  a  programming  language  that  aims  to  bring  modern programming language features to GNOME developers without impos‐
+       ing any additional  runtime requirements  and  without using  a different  ABI compared to applications and libraries written in C.
+
+       valac, the Vala compiler, is a self-hosting compiler that translates
+              Vala source code into C source and header files. It uses the GObject type system to create classes and  interfaces  declared
+              in the Vala source code.
+
+   UUssaaggee::
+              valac [OPTION?] FILE... - Vala Compiler
+
+   HHeellpp OOppttiioonnss::
+       -?, ----hheellpp
+              Show help options
+
+   AApppplliiccaattiioonn OOppttiioonnss::
+       ----vvaappiiddiirr=_D_I_R_E_C_T_O_R_Y...
+              Look for package bindings in DIRECTORY
+
+       ----ggiirrddiirr=_D_I_R_E_C_T_O_R_Y...
+              Look for .gir files in DIRECTORY
+
+       ----mmeettaaddaattaaddiirr=_D_I_R_E_C_T_O_R_Y...
+              Look for GIR .metadata files in DIRECTORY
+
+       ----ppkkgg=_P_A_C_K_A_G_E...
+              Include binding for PACKAGE
+
+       ----vvaappii=_F_I_L_E
+              Output VAPI file name
+
+       ----lliibbrraarryy=_N_A_M_E
+              Library name
+
+       ----sshhaarreedd--lliibbrraarryy=_N_A_M_E
+              Shared library name used in generated gir
+
+       ----ggiirr=_N_A_M_E_-_V_E_R_S_I_O_N.gir
+              GObject-Introspection repository file name
+
+       --bb, ----bbaasseeddiirr=_D_I_R_E_C_T_O_R_Y
+              Base source directory
+
+       --dd, ----ddiirreeccttoorryy=_D_I_R_E_C_T_O_R_Y
+              Change output directory from current working directory
+
+       ----vveerrssiioonn
+              Display version number
+
+       ----aappii--vveerrssiioonn
+              Display API version number
+
+       --CC, ----ccccooddee
+              Output C code
+
+       --HH, ----hheeaaddeerr=_F_I_L_E
+              Output C header file
+
+       ----uussee--hheeaaddeerr
+              Use C header file
+
+       ----iinncclluuddeeddiirr=_D_I_R_E_C_T_O_R_Y
+              Directory used to include the C header file
+
+       --hh, ----iinntteerrnnaall--hheeaaddeerr=_F_I_L_E
+              Output internal C header file
+
+       ----iinntteerrnnaall--vvaappii=_F_I_L_E
+              Output vapi with internal api
+
+       ----ffaasstt--vvaappii
+              Output vapi without performing symbol resolution
+
+       ----uussee--ffaasstt--vvaappii
+              Use ----ffaasstt--vvaappii output during this compile
+
+       ----vvaappii--ccoommmmeennttss
+              Include comments in generated vapi
+
+       ----ddeeppss Write make-style dependency information to this file
+
+       ----ssyymmbboollss=_F_I_L_E
+              Output symbols file
+
+       --cc, ----ccoommppiillee
+              Compile but do not link
+
+       --oo, ----oouuttppuutt=_F_I_L_E
+              Place output in file FILE
+
+       --gg, ----ddeebbuugg
+              Produce debug information
+
+       ----tthhrreeaadd
+              Enable multithreading support (DEPRECATED AND IGNORED)
+
+       ----eennaabbllee--mmeemm--pprrooffiilleerr
+              Enable GLib memory profiler
+
+       --DD, ----ddeeffiinnee=_S_Y_M_B_O_L...
+              Define SYMBOL
+
+       ----mmaaiinn=_S_Y_M_B_O_L...
+              Use SYMBOL as entry point
+
+       ----nnoossttddppkkgg
+              Do not include standard packages
+
+       ----ddiissaabbllee--aasssseerrtt
+              Disable assertions
+
+       ----eennaabbllee--cchheecckkiinngg
+              Enable additional run-time checks
+
+       ----eennaabbllee--ddeepprreeccaatteedd
+              Enable deprecated features
+
+       ----hhiiddee--iinntteerrnnaall
+              Hide symbols marked as internal
+
+       ----eennaabbllee--eexxppeerriimmeennttaall
+              Enable experimental features
+
+       ----ddiissaabbllee--wwaarrnniinnggss
+              Disable warnings
+
+       ----ffaattaall--wwaarrnniinnggss
+              Treat warnings as fatal
+
+       ----ddiissaabbllee--ssiinnccee--cchheecckk
+              Do not check whether used symbols exist in local packages
+
+       ----eennaabbllee--eexxppeerriimmeennttaall--nnoonn--nnuullll
+              Enable experimental enhancements for non-null types
+
+       ----eennaabbllee--ggoobbjjeecctt--ttrraacciinngg
+              Enable GObject creation tracing
+
+       ----cccc=_C_O_M_M_A_N_D
+              Use COMMAND as C compiler command
+
+       --XX, ----XXcccc=_O_P_T_I_O_N...
+              Pass OPTION to the C compiler
+
+       ----ppkkgg--ccoonnffiigg=_C_O_M_M_A_N_D
+              Use COMMAND as pkg-config command
+
+       ----dduummpp--ttrreeee=_F_I_L_E
+              Write code tree to FILE
+
+       ----ssaavvee--tteemmppss
+              Keep temporary files
+
+       ----pprrooffiillee=_P_R_O_F_I_L_E
+              Use the given profile instead of the default
+
+       --qq, ----qquuiieett
+              Do not print messages to the console
+
+       --vv, ----vveerrbboossee
+              Print additional messages to the console
+
+       ----nnoo--ccoolloorr
+              Disable colored output, alias for ----ccoolloorr=_n_e_v_e_r
+
+       ----ccoolloorr=_W_H_E_N
+              Enable color output, options are 'always', 'never', or 'auto'
+              When  no  value  is given _a_l_w_a_y_s is implied. When neither ----ccoolloorr or ----nnoo--ccoolloorr are declared then ----ccoolloorr=_a_u_t_o is used where
+              output is colored when stderr is a terminal.
+
+       ----ttaarrggeett--gglliibb=_M_A_J_O_R.MINOR
+              Target version of glib for code generation
+
+       ----ggrreessoouurrcceess=_F_I_L_E...
+              XML of gresources
+
+       ----ggrreessoouurrcceessddiirr=_D_I_R_E_C_T_O_R_Y...
+              Look for resources in DIRECTORY
+
+       ----eennaabbllee--vveerrssiioonn--hheeaaddeerr
+              Write vala build version in generated files
+
+       ----ddiissaabbllee--vveerrssiioonn--hheeaaddeerr
+              Do not write vala build version in generated files
+
+       ----rruunn--aarrggss
+              Arguments passed to directly compiled executeable
+
+       ----aabbii--ssttaabbiilliittyy
+              Enable support for ABI stability
+              This changes the current behaviour to output public members of classes and interfaces the same order as they appear in  Vala
+              source.   For  libraries  is  recommended  to use ----aabbii--ssttaabbiilliittyy to ensure the maintainability of the resulting Application
+              Binary Interface (ABI).  This option is disabled by default for backward compatibility because it can break ABI of  existing
+              projects.
+
+BBUUGGSS
+       https://gitlab.gnome.org/GNOME/vala/issues
+
+HHOOMMEEPPAAGGEE OORR CCOONNTTAACCTT
+       https://wiki.gnome.org/Projects/Vala
+
+FFEEAATTUURREESS
+       Interfaces,  properties,  signals,  foreach,  lambda  expressions,  type  inference  for local variables, generics, non-null types,
+       assisted memory management, exception handling
+
+AAUUTTHHOORRSS
+       J??rg Billeter, Raffaele Sandrini.
+
+valac 0.40.13                                                  January 2019                                                       VALAC(1)

@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Settings;
+use Illuminate\Http\Request;
+
+class SettingsController extends Controller
+{
+    public function get()
+    {
+	return Settings::all()->first();
+    }
+
+    public function modify(Request $request)
+    {
+	$settings = Settings::all()->first();
+	if ($settings === null) {
+	    // first use, initialize the settings
+	    $settings = new Settings();
+	}
+	// put the values and save
+	$settings->save();
+    }
+}

@@ -1,0 +1,496 @@
+<template>
+  <div style="padding: 30px">
+    <el-row>
+      <el-form :model="dateForm" label-position="top">
+        <el-form-item label="Selectionnez le mois">
+	  <el-col :span="6">
+            <el-date-picker v-model="dateForm.date" :picker-options="dateOptions" type="month">
+	    </el-date-picker>
+	  </el-col>
+	  <el-col :span="11">
+            <el-button type="primary" @click="loadPayroll">valider</el-button>
+	  </el-col>
+	</el-form-item>
+      </el-form>
+    </el-row>
+    <el-row v-if="list !== null">
+      <el-button type="success">Imprimer les fiches</el-button>
+      <el-button type="primary" @click="recompute">Recalculer les fiches</el-button>
+    </el-row>
+    <br />
+    <el-row>
+
+
+    <!-- show Dialogs -->
+    <el-dialog v-if="toShow !== null && deductionsModel !== null && primesModel !== null" 
+	    :title="'Fiche de paie de ' + list[toShow].last_name + ' ' + list[toShow].first_name" 
+	    :visible.sync="showDialog"
+	    width="75%">
+      <div class="paySheetTable">
+          <table>
+            <tr style="background: #aaa;">
+              <th>Element</th>
+              <th>Base de calcul</th>
+              <th>Nb/Taux</th>
+              <th>Retenues</th>
+              <th>Avoirs</th>
+	    </tr>
+	    <tr v-for="prime in primes" :key="prime.id">
+              <td style="text-align: justify">{{ prime.name }}</td>
+	      <td>{{ primesModel[prime.id] }}</td>
+              <td></td>
+              <td></td>
+	      <td>{{ primesModel[prime.id] }}</td>
+	    </tr>
+	    <tr v-for="deduction in deductions" :key="deduction.id">
+              <td style="text-align: left">{{ deduction.name }}</td>
+              <td>{{ deductionsModel[deduction.id] }}</td>
+              <td></td>
+              <td>{{ deductionsModel[deduction.id] }}</td>
+              <td></td>
+	    </tr>
+	    <tr v-if="settings">
+              <td style="text-align: left">COTISATION CNSS</td>
+	      <td>{{ list[toShow].salaries[0].employee_contribution_rate}}</td>
+              <td></td>
+	      <td>{{ list[toShow].salaries[0].employee_contribution_rate}}</td>
+              <td></td>
+	    </tr>
+	    <tr>
+              <td>IMPOT SUR LE REVENU</td>
+	      <td>0</td>
+              <td></td>
+	      <td>0</td>
+              <td></td>
+	    </tr>
+	    <tr v-if="settings">
+              <td style="text-align: left">TCS</td>
+	      <td>{{ list[toShow].salaries[0].payroll_tax }}</td>
+              <td></td>
+	      <td>{{ list[toShow].salaries[0].payroll_tax }}</td>
+              <td></td>
+	    </tr>
+	    <tr>
+              <td style="text-align: left">AVANCE SUR SALAIRE</td>
+	      <td>{{ advances }}</td>
+              <td></td>
+	      <td>{{ advances }}</td>
+              <td></td>
+	    </tr>
+	    <tr>
+              <td style="text-align: left">CREDIT AU PERSONNEL</td>
+	      <td>0</td>
+              <td></td>
+	      <td>0</td>
+              <td></td>
+	    </tr>
+	    <tr>
+              <td colspan="3"><b>TOTAUX</b></td>
+	      <td>{{ totalDeductions }}</td>
+	      <td>{{ totalPrimes }}</td>
+	    </tr>
+	    <tr style="background: #aaa;">
+              <td><b>SALAIRE BRUT</b></td>
+              <td><b>RETENUE OBLIGATOIRE</b></td>
+              <td><b>SALAIRE NET</b></td>
+              <td><b>AUTRES RETENUES</b></td>
+              <td><b>NET A PAYER</b></td>
+	    </tr>
+	    <tr>
+              <td>{{ list[toShow].base_salary }}</td>
+              <td>{{ mandatoryDeductions }}</td>
+	      <td>{{ netSalary ? netSalary : '-' }}</td>
+              <td>{{ otherDeductions }}</td>
+	      <td>{{ netToPay }}</td>
+	    </tr>
+	  </table>
+	  <el-button type="success" @click="validate()">valider</el-button>
+	  <el-button type="primary" @click="showDialog = false">retour</el-button>
+      </div>
+
+    </el-dialog>
+
+    <!-- modify Dialogs -->
+    <el-dialog v-if="toChange !== null" 
+	    :title="'Fiche de paie de ' + list[toChange].last_name + ' ' + list[toChange].first_name" 
+	    :visible.sync="modifyDialog"
+	    width="75%">
+      <div class="paySheetTable">
+        <el-form :model="propertyForm" size="mini">
+          <table>
+            <tr style="background: #aaa;">
+              <th>Element</th>
+              <th>Base de calcul</th>
+              <th>Nb/Taux</th>
+              <th>Retenues</th>
+              <th>Avoirs</th>
+	    </tr>
+	    <tr v-for="prime in primes">
+              <td style="text-align: left">{{ prime.name }}</td>
+              <td>
+	        <el-form-item>
+	          <el-input-number :min="0" :max="100000"
+			  controls-position="right" v-model="primesModel[prime.id]"></el-input-number>
+	        </el-form-item>
+	      </td>
+              <td></td>
+              <td></td>
+	      <td>{{ primesModel[prime.id] }}</td>
+	    </tr>
+	    <tr v-for="deduction in deductions">
+              <td style="text-align: left">{{ deduction.name }}</td>
+              <td>
+	        <el-form-item>
+	          <el-input-number :min="0" :max="1000000"
+			  controls-position="right" v-model="deductionsModel[deduction.id]"></el-input-number>
+	        </el-form-item>
+	      </td>
+              <td></td>
+              <td>{{ deductionsModel[deduction.id] }}</td>
+              <td></td>
+	    </tr>
+	    <tr v-if="settings">
+              <td style="text-align: left">COTISATION CNSS</td>
+	      <td>{{ list[toChange].salaries[0].employee_contribution_rate}}</td>
+              <td></td>
+	      <td>{{ list[toChange].salaries[0].employee_contribution_rate}}</td>
+              <td></td>
+	    </tr>
+	    <tr>
+              <td>IMPOT SUR LE REVENU</td>
+	      <td>0</td>
+              <td></td>
+	      <td>0</td>
+              <td></td>
+	    </tr>
+	    <tr v-if="settings">
+              <td style="text-align: left">TCS</td>
+	      <td>{{ list[toChange].salaries[0].payroll_tax }}</td>
+              <td></td>
+	      <td>{{ list[toChange].salaries[0].payroll_tax }}</td>
+              <td></td>
+	    </tr>
+	    <tr>
+              <td style="text-align: left">AVANCE SUR SALAIRE</td>
+	      <td>{{ advances }}</td>
+              <td></td>
+	      <td>{{ advances }}</td>
+              <td></td>
+	    </tr>
+	    <tr>
+              <td style="text-align: left">CREDIT AU PERSONNEL</td>
+	      <td>0</td>
+              <td></td>
+	      <td>0</td>
+              <td></td>
+	    </tr>
+	    <tr>
+              <td colspan="3">TOTAUX</td>
+	      <td>{{ totalDeductions }}</td>
+	      <td>{{ totalPrimes }}</td>
+	    </tr>
+	    <tr style="background: #aaa;">
+              <td><b>SALAIRE BRUT</b></td>
+              <td><b>RETENUE OBLIGATOIRE</b></td>
+              <td><b>SALAIRE NET</b></td>
+              <td><b>AUTRES RETENUES</b></td>
+              <td><b>NET A PAYER</b></td>
+	    </tr>
+	    <tr>
+              <td>{{ list[toChange].base_salary }}</td>
+	      <td>{{ mandatoryDeductions }}</td>
+	      <td>{{ netSalary ? netSalary : '-' }}</td>
+	      <td>{{ otherDeductions }}</td>
+	      <td>{{ netToPay }}</td>
+	    </tr>
+	  </table>
+	  <el-button type="primary" @click="modifySalary">Modifier</el-button>
+	  <el-button type="danger" @click="modifyDialog = false">retour</el-button>
+        </el-form>
+      </div>
+
+    </el-dialog>
+
+
+  <el-table :data="list" border fit highlight-current-row 
+	  @selection-change="handleSelection" style="width:100%">
+
+    <el-table-column type="selection" align="center" label="ID" width="50">
+    </el-table-column>
+
+    <el-table-column min-width="300px" label="Nom">
+      <template slot-scope="scope">
+        <span>{{scope.row.last_name}}</span>
+      </template>
+    </el-table-column>
+
+    <el-table-column min-width="300px" label="Prenoms">
+      <template slot-scope="scope">
+        <span>{{scope.row.first_name}}</span>
+      </template>
+    </el-table-column>
+
+
+    <el-table-column min-width="70px" label="vérifié">
+      <template slot-scope="scope">
+	      <div style="text-align: center">
+        <span v-if= 'scope.row.salaries[0].reviewed'><i class="el-icon-check"></i></span>
+        <span v-if= '!scope.row.salaries[0].reviewed'><i class="el-icon-close"></i></span>
+	</div>
+      </template>
+    </el-table-column>
+
+    <el-table-column min-width="300px" label="Opérations">
+      <template slot-scope="scope">
+	<el-button size="mini" type="success" @click="openShowDialog(scope.$index)">
+	  consulter
+	</el-button>
+	<el-button size="mini" type="danger" 
+		@click="openModifyDialog(scope.$index)">
+	  modifier
+	</el-button>
+	<el-button size="mini" type="primary" @click="printSingle"> 
+	  imprimer
+	</el-button>
+      </template>
+    </el-table-column>
+
+  </el-table>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import { Message } from 'element-ui'
+import { query } from '@/api/api'
+import Vue from 'vue'
+
+export default {
+  data() {
+    return {
+      list: null,
+      primes: [],
+      deductions: [],
+      primesModel: {},
+      deductionsModel: {},
+      selected: [],
+      toChange: null, // index of the element to modify
+      toShow: null, // index of the element to show
+      settings: null,
+      loading: false,
+      addDialog: false,
+      modifyDialog: false,
+      showDialog: false,
+      netToPay: 0,
+      totalAvoir: 0,
+      value: '',
+      dateOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now()
+        }
+      },
+      dateForm: {
+        date: null
+      },
+      propertyForm: {
+        name: '',
+        description: '',
+        regex: ''
+      }
+    }
+  },
+  created() {
+    this.getElements()
+    this.getSettings()
+  },
+  computed: {
+    totalPrimes() {
+      let total = 0
+      for (const p of this.primes) {
+        total += parseInt(this.primesModel[p.id])
+      }
+      return total
+    },
+    totalDeductions() {
+      let total = 0
+      for (const d of this.deductions) {
+        total += parseInt(this.deductionsModel[d.id])
+      }
+      return total
+    },
+    netSalary() {
+      let baseSalary = 0
+      if (this.toChange == null) baseSalary = parseFloat(this.list[this.toShow].base_salary)
+      else baseSalary = parseFloat(this.list[this.toChange].base_salary)
+      return baseSalary + this.totalPrimes - this.totalDeductions
+    },
+    advances() {
+      let total = 0
+      let emp = this.list[this.toShow === null ? this.toChange : this.toShow]
+      for (let a of emp.advances) {
+        total += parseInt(a.amount);
+      }
+      return total
+    },
+    mandatoryDeductions() {
+      let emp = this.list[this.toShow === null ? this.toChange : this.toShow]
+      return emp.payroll_tax
+    },
+    otherDeductions() {
+      let emp = this.list[this.toShow === null ? this.toChange : this.toShow]
+      return this.advances
+    }
+  },
+  methods: {
+    getEmployees() {
+      if (this.dateForm.date !== null) {
+        const year = this.dateForm.date.getFullYear()
+        const month = this.dateForm.date.getMonth() + 1
+        console.log(this.dateForm.date, ' - ', year, ' - ', month)
+        query('employee/allwithsalary/' + month + '/' + year, 'GET').then((res) => {
+          this.list = res.data
+        })
+      }
+    },
+    getSettings() {
+      query('settings', 'GET').then((res) => {
+        console.log(res.data)
+        this.settings = res.data
+      })
+    },
+    getElements() {
+      query('element/primes', 'GET').then((res) => {
+        this.primes = res.data
+        for (const p of this.primes) {
+          Vue.set(this.primesModel, p.id, 0)
+        }
+        console.log('primes model ', this.primesModel)
+        console.log(res.data)
+      })
+      query('element/deductions', 'GET').then((res) => {
+        this.deductions = res.data
+        for (const d of this.deductions) {
+          Vue.set(this.deductionsModel, d.id, 0)
+        }
+        console.log(res.data)
+      })
+    },
+    handleSelection(rows) {
+      console.log(rows)
+      this.selected = rows
+    },
+    initializeElementsModel() { 
+      for (const p of this.primes) {
+        this.primesModel[p.id] = 0
+      }
+      for (const d of this.deductions) {
+        this.deductionsModel[d.id] = 0
+      }
+    },
+    openShowDialog(index) {
+      this.toChange = null
+      this.toShow = index
+      const toShow = this.list[index]
+      const elements = toShow.salaries[0].elements
+      console.log('elements : ', elements)
+      this.initializeElementsModel() 
+      for (const e of elements) {
+        console.log('looping')
+        if (e.type === '+') {
+          this.primesModel[e.id] = e.pivot.value
+        } else if (e.type === '-') {
+          this.deductionsModel[e.id] = e.pivot.value
+        }
+      }
+      this.showDialog = true
+    },
+    openModifyDialog(index) {
+      this.toShow = null
+      this.toChange = index
+      const toChange = JSON.parse(JSON.stringify(this.list[index]))
+      const elements = toChange.salaries[0].elements
+      this.initializeElementsModel() 
+      for (const e of elements) {
+        console.log('looping')
+        if (e.type === '+') {
+          this.primesModel[e.id] = e.pivot.value
+        } else if (e.type === '-') {
+          this.deductionsModel[e.id] = e.pivot.value
+        }
+      }
+      this.modifyDialog = true
+    },
+    printSingle() {
+      Message({ message: 'impression en cours', type: 'success', duration: 5000 })
+    },
+    loadPayroll() {
+      if (this.dateForm.date !== null) {
+        const year = this.dateForm.date.getFullYear()
+        const month = this.dateForm.date.getMonth() + 1
+        console.log(this.dateForm.date, ' - ', year, ' - ', month)
+        query('payroll/get/' + month + '/' + year, 'GET').then(() => {
+          query('employee/allwithsalary/' + month + '/' + year, 'GET').then((res) => {
+            this.list = res.data
+            console.log(res)
+          })
+        })
+      }
+    },
+    validate() {
+      const toShow = this.list[this.toShow]
+      if (!toShow.salaries[0].reviewed) {
+        query('payroll/validate/' + toShow.salaries[0].id, 'GET').then((res) => {
+	  this.showDialog = false
+          if (res.data.success) {
+            console.log('validated')
+            toShow.salaries[0].reviewed = true
+	  } else {
+            console.log(res.data.message)
+	  }
+        })
+      }
+    },
+    recompute() {
+      const year = this.dateForm.date.getFullYear()
+      const month = this.dateForm.date.getMonth() + 1
+      query('payroll/recompute/' + month + '/' + year, 'GET').then((res) => {
+        this.loadPayroll()
+      });
+    },
+    modifySalary() {
+      const data = {
+        "primes": this.primesModel,
+        "deductions": this.deductionsModel,
+      }
+      const id = this.list[this.toChange].salaries[0].id
+      console.log(JSON.stringify(data))
+      query('payroll/modify/' + id, 'POST', { "data": JSON.stringify(data) }).then((res) => {
+	const ans = res.data[0]
+        if ('success' in ans) {
+          console.log(ans)
+	} else {
+          // update modified element
+	  Vue.set(this.list[this.toChange].salaries, 0, ans)
+	}
+        console.log(res)
+      })
+    }
+  }
+}
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+.paySheetTable {
+  margin: 5px;
+  color: #000;
+}
+
+.paySheetTable table, th, td  {
+  border: 1px solid black;
+  border-collapse: collapse;
+  margin: auto;
+}
+
+.paySheetTable th, td {
+  text-align: center;
+}
+</style>
